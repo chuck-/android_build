@@ -520,8 +520,11 @@ else if get_stage("%(bcb_dev)s", "stage") == "3/3" then
   if "selinux_fc" in OPTIONS.info_dict:
     WritePolicyConfig(OPTIONS.info_dict["selinux_fc"], output_zip)
 
-  script.FormatPartition("/system")
+  if not device_specific.FullOTA_FormatSystemPartition():
+    script.FormatPartition("/system")
+  
   script.Mount("/system")
+  
   if not OPTIONS.no_separate_recovery:
     script.UnpackPackageDir("recovery", "/system")
   script.UnpackPackageDir("system", "/system")
@@ -537,8 +540,12 @@ else if get_stage("%(bcb_dev)s", "stage") == "3/3" then
   Item.GetMetadata(input_zip)
   Item.Get("system").SetPermissions(script)
 
-  common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
-  common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
+  if device_specific.FullOTA_DisableBootImageInstallation():
+    print "Boot image installation is disabled due to a device-specific rule."
+  else:
+    common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
+    common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
+  
   script.ShowProgress(0.2, 0)
 
   if OPTIONS.backuptool:
@@ -546,7 +553,9 @@ else if get_stage("%(bcb_dev)s", "stage") == "3/3" then
     script.RunBackup("restore")
 
   script.ShowProgress(0.2, 10)
-  script.WriteRawImage("/boot", "boot.img")
+  
+  if not device_specific.FullOTA_DisableBootImageInstallation():
+    script.WriteRawImage("/boot", "boot.img")
 
   script.ShowProgress(0.1, 0)
   device_specific.FullOTA_InstallEnd()

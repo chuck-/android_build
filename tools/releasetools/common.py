@@ -795,6 +795,20 @@ class DeviceSpecificParams(object):
     """Called at the end of full OTA installation; typically this is
     used to install the image for the device's baseband processor."""
     return self._DoCall("FullOTA_InstallEnd")
+    
+  def FullOTA_DisableBootImageInstallation(self):
+    """Called to check if the boot image installation should be skipped
+    (which is useful for devices with a locked bootloader)."""
+    return self._DoCall("FullOTA_DisableBootImageInstallation", [ None ], default=False)
+    
+
+  def FullOTA_FormatSystemPartition(self):
+    """Called to indicate that the /system partition should now be
+    formatted. A custom formatting routine cam be implemented here (in
+    this case FullOTA_FormatSystemPartition should return True which
+    indicates that formatting will be skipped as it was already done
+    by this hook)."""
+    return self._DoCall("FullOTA_FormatSystemPartition") 
 
   def IncrementalOTA_Assertions(self):
     """Called after emitting the block of assertions at the top of an
